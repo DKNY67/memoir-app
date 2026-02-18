@@ -352,17 +352,17 @@ const EVENT_KEY = 'memoir-event-' + EVENT_ID;
 async function init() {
   if (!EVENT_ID) { showNotFound(); return; }
 
-  // Load event data
+  // Load event data from localStorage
   try {
-    const r = await window.storage.get(EVENT_KEY, true);
-    if (r) eventData = JSON.parse(r.value);
+    const raw = localStorage.getItem(EVENT_KEY);
+    if (raw) eventData = JSON.parse(raw);
   } catch(e) {}
 
   if (!eventData) {
     // fallback for direct demo access
-    if (EVENT_ID === 'dikin-eka-2024' || EVENT_ID === 'demo') {
-      eventData = { id: EVENT_ID, type: 'wedding', name1: 'Dikin', name2: 'Eka', date: '2024-12-14', location: 'Jakarta', password: '' };
-      await window.storage.set(EVENT_KEY, JSON.stringify(eventData), true);
+    if (EVENT_ID === 'dikin-eka-2026' || EVENT_ID === 'demo') {
+      eventData = { id: EVENT_ID, type: 'wedding', name1: 'Dikin', name2: 'Eka', date: '2026-02-18', location: 'Pati', password: '' };
+      localStorage.setItem(EVENT_KEY, JSON.stringify(eventData));
     } else {
       showNotFound(); return;
     }
@@ -416,15 +416,20 @@ function updateHero() {
 // ── PHOTOS ────────────────────────────────────────────────────
 async function loadPhotos() {
   try {
-    const r = await window.storage.get(STORAGE_KEY, true);
-    if (r) photos = JSON.parse(r.value);
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) photos = JSON.parse(raw);
   } catch(e) { photos = []; }
   renderGallery();
   updateStats();
 }
 
 async function savePhotos() {
-  await window.storage.set(STORAGE_KEY, JSON.stringify(photos), true);
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(photos));
+  } catch(e) {
+    // localStorage full - compress older photos
+    showToast('Penyimpanan hampir penuh, hapus beberapa foto lama');
+  }
 }
 
 // ── GALLERY ───────────────────────────────────────────────────
@@ -695,7 +700,7 @@ function showGuestList() {
 async function deleteAllPhotos() {
   if (!confirm('Yakin hapus SEMUA foto? Tindakan ini tidak bisa dibatalkan.')) return;
   photos = [];
-  await savePhotos();
+  localStorage.removeItem(STORAGE_KEY);
   renderGallery();
   updateStats();
   showToast('Semua foto dihapus');
