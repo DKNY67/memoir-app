@@ -1,0 +1,720 @@
+<!-- Memoir v2.1 - fixed localStorage - 2026-02-18 -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memoir — Loading...</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+:root{
+  --blush:#F2E8E1;--rose:#C4846A;--gold:#B8976A;
+  --deep:#2C1F1A;--warm:#8C5E4A;--paper:#FAF5F0;--soft:#E8D8CF;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--paper);color:var(--deep);font-family:'Jost',sans-serif;font-weight:300;overflow-x:hidden;}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:0.35;}
+
+/* ── NAV ── */
+.nav{position:fixed;top:0;left:0;right:0;z-index:500;padding:16px 32px;display:flex;justify-content:space-between;align-items:center;transition:background .3s;}
+.nav.scrolled{background:rgba(250,245,240,.95);backdrop-filter:blur(8px);box-shadow:0 1px 0 var(--soft);}
+.nav-logo{font-family:'Playfair Display',serif;font-size:16px;font-style:italic;color:var(--deep);cursor:pointer;}
+.nav-actions{display:flex;gap:10px;align-items:center;}
+.btn-sm{padding:9px 20px;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;border:none;transition:all .2s;}
+.btn-rose{background:var(--rose);color:white;}
+.btn-rose:hover{background:var(--warm);}
+.btn-outline-sm{background:transparent;border:1px solid var(--gold);color:var(--deep);}
+.btn-outline-sm:hover{background:var(--gold);color:white;}
+.btn-ghost{background:transparent;border:1px solid var(--soft);color:var(--warm);font-size:10px;padding:8px 14px;}
+.btn-ghost:hover{border-color:var(--warm);}
+
+/* ── HERO ── */
+.hero{min-height:100vh;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 24px 60px;overflow:hidden;}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 20% 80%,rgba(196,132,106,.18) 0%,transparent 60%),radial-gradient(ellipse 60% 50% at 80% 20%,rgba(184,151,106,.14) 0%,transparent 60%),var(--blush);}
+.hero-deco{position:absolute;opacity:.14;pointer-events:none;}
+.hero-deco.tl{top:-40px;left:-60px;width:320px;transform:rotate(-10deg);}
+.hero-deco.br{bottom:-40px;right:-60px;width:320px;transform:rotate(170deg);}
+
+.hero-content{position:relative;z-index:2;}
+.hero-type{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--warm);margin-bottom:16px;animation:fadeUp .7s ease both;}
+.hero-names{font-family:'Playfair Display',serif;font-size:clamp(48px,11vw,108px);font-weight:400;line-height:1;animation:fadeUp .7s .1s ease both;}
+.hero-names em{display:block;font-style:italic;color:var(--rose);}
+.hero-amp{display:block;font-size:.3em;font-style:normal;color:var(--gold);letter-spacing:.1em;margin:-6px 0;}
+.hero-date{font-size:13px;letter-spacing:.15em;color:var(--warm);margin-top:20px;animation:fadeUp .7s .2s ease both;}
+.hero-line{width:1px;height:56px;background:linear-gradient(to bottom,transparent,var(--gold),transparent);margin:28px auto;animation:fadeUp .7s .3s ease both;}
+.hero-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;animation:fadeUp .7s .4s ease both;}
+.btn-lg{padding:15px 36px;font-family:'Jost',sans-serif;font-size:12px;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;border:none;transition:all .3s;}
+.btn-dark{background:var(--deep);color:var(--blush);}
+.btn-dark:hover{background:var(--rose);}
+.btn-border{background:transparent;border:1px solid var(--gold);color:var(--deep);}
+.btn-border:hover{background:var(--gold);color:white;}
+.hero-stats{display:flex;gap:48px;justify-content:center;margin-top:44px;animation:fadeUp .7s .5s ease both;}
+.hstat{text-align:center;}
+.hstat-n{font-family:'Playfair Display',serif;font-size:30px;font-style:italic;color:var(--rose);}
+.hstat-l{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--warm);margin-top:3px;}
+
+/* ── SECTIONS ── */
+.section{padding:80px 24px;max-width:1200px;margin:0 auto;}
+.sec-head{text-align:center;margin-bottom:52px;}
+.sec-label{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--warm);margin-bottom:10px;}
+.sec-title{font-family:'Playfair Display',serif;font-size:clamp(28px,5vw,48px);font-weight:400;line-height:1.1;}
+.sec-title em{font-style:italic;color:var(--rose);}
+
+/* ── GALLERY ── */
+.gal-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
+.gal-count{font-size:12px;letter-spacing:.1em;color:var(--warm);}
+.gal-filters{display:flex;gap:8px;flex-wrap:wrap;}
+.filter-pill{background:none;border:1px solid var(--soft);color:var(--warm);padding:6px 16px;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s;}
+.filter-pill.on{background:var(--deep);color:var(--blush);border-color:var(--deep);}
+
+.gallery-grid{columns:3;column-gap:14px;}
+@media(max-width:768px){.gallery-grid{columns:2;}}
+@media(max-width:480px){.gallery-grid{columns:1;}}
+
+.photo-card{break-inside:avoid;margin-bottom:14px;position:relative;overflow:hidden;cursor:pointer;background:var(--soft);animation:fadeUp .5s ease both;}
+.photo-card img{width:100%;display:block;object-fit:cover;transition:transform .5s;filter:saturate(.9) contrast(1.02);}
+.photo-card:hover img{transform:scale(1.05);}
+.photo-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(44,31,26,.82) 0%,transparent 55%);opacity:0;transition:opacity .3s;display:flex;flex-direction:column;justify-content:flex-end;padding:18px;}
+.photo-card:hover .photo-ov{opacity:1;}
+.photo-name{font-size:14px;color:var(--blush);letter-spacing:.04em;}
+.photo-time{font-size:10px;color:var(--soft);letter-spacing:.08em;margin-top:2px;}
+.photo-badge{position:absolute;top:10px;left:10px;background:rgba(44,31,26,.72);color:var(--blush);font-size:9px;letter-spacing:.1em;padding:3px 9px;text-transform:uppercase;backdrop-filter:blur(4px);}
+
+/* watermark overlay on card */
+.photo-wm{position:absolute;bottom:8px;right:10px;font-family:'Playfair Display',serif;font-size:11px;font-style:italic;color:rgba(255,255,255,.5);letter-spacing:.04em;pointer-events:none;}
+
+.empty-gal{text-align:center;padding:72px 20px;display:none;}
+.empty-gal p{font-family:'Playfair Display',serif;font-size:22px;font-style:italic;color:var(--soft);}
+
+/* ── UPLOAD BAND ── */
+.upload-band{background:var(--blush);padding:80px 24px;text-align:center;position:relative;overflow:hidden;}
+.upload-band::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 80% at 50% 50%,rgba(196,132,106,.1),transparent);}
+.upload-inner{max-width:520px;margin:0 auto;position:relative;z-index:2;}
+
+/* ── QR SECTION ── */
+.qr-sec{background:var(--deep);color:var(--blush);padding:80px 24px;text-align:center;}
+.qr-sec .sec-label{color:var(--gold);}
+.qr-sec .sec-title{color:var(--blush);}
+.qr-sec .sec-title em{color:var(--rose);}
+.qr-wrap{display:flex;gap:56px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:44px;}
+.qr-box-outer{background:white;padding:20px;display:inline-block;}
+.qr-info{max-width:340px;text-align:left;}
+.qr-info h3{font-family:'Playfair Display',serif;font-size:24px;font-weight:400;margin-bottom:14px;}
+.qr-info p{font-size:13px;line-height:1.8;color:var(--soft);margin-bottom:20px;}
+.qr-link-box{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);padding:11px 16px;font-size:11px;color:var(--gold);word-break:break-all;margin-bottom:16px;display:block;text-align:left;letter-spacing:.04em;}
+.qr-btns{display:flex;gap:10px;flex-wrap:wrap;}
+
+/* ── ADMIN PANEL ── */
+.admin-panel{display:none;background:var(--paper);border:2px solid var(--gold);padding:32px;margin:0 24px 32px;max-width:1200px;margin-left:auto;margin-right:auto;}
+.admin-panel.show{display:block;}
+.admin-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;margin-bottom:20px;display:flex;align-items:center;gap:12px;}
+.admin-title span{font-size:12px;letter-spacing:.15em;font-family:'Jost',sans-serif;background:var(--gold);color:white;padding:3px 10px;}
+.admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px;}
+.admin-stat{background:white;border:1px solid var(--soft);padding:20px;text-align:center;}
+.admin-stat-n{font-family:'Playfair Display',serif;font-size:28px;font-style:italic;color:var(--rose);}
+.admin-stat-l{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--warm);margin-top:4px;}
+.admin-actions{display:flex;gap:10px;flex-wrap:wrap;}
+
+/* ── LIGHTBOX ── */
+.lb{position:fixed;inset:0;background:rgba(44,31,26,.96);z-index:9000;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .3s;}
+.lb.open{opacity:1;pointer-events:all;}
+.lb-img-wrap{position:relative;display:flex;align-items:center;justify-content:center;max-width:90vw;max-height:85vh;}
+.lb img{max-width:90vw;max-height:80vh;object-fit:contain;display:block;}
+.lb-wm{position:absolute;bottom:12px;right:16px;font-family:'Playfair Display',serif;font-size:13px;font-style:italic;color:rgba(255,255,255,.55);letter-spacing:.04em;text-shadow:0 1px 3px rgba(0,0,0,.5);}
+.lb-info{position:absolute;bottom:0;left:0;right:0;text-align:center;color:var(--blush);padding:16px;}
+.lb-name{font-family:'Playfair Display',serif;font-size:18px;font-style:italic;}
+.lb-time{font-size:10px;color:var(--soft);letter-spacing:.1em;margin-top:3px;}
+.lb-close{position:absolute;top:20px;right:28px;background:none;border:none;color:var(--blush);font-size:36px;cursor:pointer;font-family:'Playfair Display',serif;line-height:1;}
+.lb-close:hover{color:var(--rose);}
+.lb-nav{position:absolute;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(242,232,225,.55);font-size:48px;cursor:pointer;transition:color .2s;line-height:1;font-family:'Playfair Display',serif;padding:0 12px;}
+.lb-nav:hover{color:var(--rose);}
+.lb-prev{left:4px;}.lb-next{right:4px;}
+
+/* ── UPLOAD MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(44,31,26,.88);z-index:8000;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .3s;}
+.overlay.open{opacity:1;pointer-events:all;}
+.modal-c{background:var(--paper);max-width:460px;width:100%;padding:44px 36px;transform:translateY(20px);transition:transform .3s;max-height:90vh;overflow-y:auto;}
+.overlay.open .modal-c{transform:translateY(0);}
+.modal-c h2{font-family:'Playfair Display',serif;font-size:26px;font-weight:400;margin-bottom:6px;}
+.modal-sub{font-size:13px;color:var(--warm);margin-bottom:28px;}
+.field{margin-bottom:18px;}
+.field label{display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--warm);margin-bottom:7px;}
+.field input{width:100%;background:white;border:none;border-bottom:2px solid var(--soft);padding:10px 0;font-family:'Playfair Display',serif;font-size:17px;color:var(--deep);outline:none;transition:border-color .2s;}
+.field input:focus{border-bottom-color:var(--rose);}
+.field input::placeholder{color:var(--soft);font-style:italic;}
+
+.drop-z{border:1.5px dashed var(--gold);padding:36px 24px;text-align:center;cursor:pointer;transition:all .3s;background:rgba(250,245,240,.5);}
+.drop-z:hover,.drop-z.drag{background:rgba(250,245,240,.95);border-color:var(--rose);}
+.drop-z p{font-size:13px;color:var(--warm);line-height:1.7;margin-top:10px;}
+.drop-z strong{color:var(--deep);}
+
+.prev-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;margin:12px 0;}
+.prev-grid img{aspect-ratio:1;object-fit:cover;width:100%;}
+
+.prog{width:100%;height:3px;background:var(--soft);margin:10px 0;display:none;}
+.prog-fill{height:100%;background:linear-gradient(to right,var(--gold),var(--rose));width:0%;transition:width .3s;}
+
+.modal-btns{display:flex;gap:10px;margin-top:8px;}
+.btn-cancel-m{flex:1;background:transparent;border:1px solid var(--soft);color:var(--warm);padding:13px;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;}
+.btn-submit{flex:2;background:var(--deep);color:var(--blush);border:none;padding:13px;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:background .2s;}
+.btn-submit:hover{background:var(--rose);}
+.btn-submit:disabled{opacity:.5;cursor:wait;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--deep);color:var(--blush);padding:14px 28px;font-size:12px;letter-spacing:.1em;z-index:9998;transition:transform .4s;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* ── FOOTER ── */
+footer{background:var(--deep);color:var(--soft);text-align:center;padding:40px 24px;font-size:12px;letter-spacing:.1em;}
+footer .ft{font-family:'Playfair Display',serif;font-size:20px;font-style:italic;margin-bottom:8px;color:var(--blush);}
+footer a{color:var(--gold);text-decoration:none;font-size:11px;}
+footer a:hover{color:var(--rose);}
+
+/* ── NOT FOUND ── */
+.not-found{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;background:var(--blush);}
+.not-found h1{font-family:'Playfair Display',serif;font-size:48px;font-weight:400;font-style:italic;color:var(--rose);margin-bottom:16px;}
+.not-found p{font-size:14px;color:var(--warm);margin-bottom:32px;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+</style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav class="nav" id="nav">
+  <div class="nav-logo" onclick="window.location.href='index.html'">Memoir</div>
+  <div class="nav-actions">
+    <button class="btn-sm btn-ghost" id="btn-admin-toggle" onclick="toggleAdminPanel()" style="display:none">⚙ Admin</button>
+    <button class="btn-sm btn-outline-sm" onclick="document.getElementById('qr-section').scrollIntoView({behavior:'smooth'})">QR Code</button>
+    <button class="btn-sm btn-rose" onclick="openUpload()">+ Upload Foto</button>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="hero" id="hero">
+  <div class="hero-bg"></div>
+  <svg class="hero-deco tl" viewBox="0 0 300 300" fill="none"><circle cx="80" cy="80" r="40" stroke="#B8976A" stroke-width="1"/><circle cx="150" cy="60" r="30" stroke="#C4846A" stroke-width="1"/><circle cx="60" cy="160" r="35" stroke="#B8976A" stroke-width="1"/><ellipse cx="80" cy="40" rx="12" ry="24" stroke="#B8976A" stroke-width="0.8" transform="rotate(-30 80 40)"/><ellipse cx="200" cy="80" rx="10" ry="20" stroke="#C4846A" stroke-width="0.8" transform="rotate(20 200 80)"/><circle cx="120" cy="120" r="8" fill="#C4846A" opacity="0.4"/></svg>
+  <svg class="hero-deco br" viewBox="0 0 300 300" fill="none"><circle cx="80" cy="80" r="40" stroke="#B8976A" stroke-width="1"/><circle cx="150" cy="60" r="30" stroke="#C4846A" stroke-width="1"/><circle cx="60" cy="160" r="35" stroke="#B8976A" stroke-width="1"/><ellipse cx="80" cy="40" rx="12" ry="24" stroke="#B8976A" stroke-width="0.8" transform="rotate(-30 80 40)"/><ellipse cx="200" cy="80" rx="10" ry="20" stroke="#C4846A" stroke-width="0.8" transform="rotate(20 200 80)"/></svg>
+
+  <div class="hero-content">
+    <div class="hero-type" id="hero-type">Wedding</div>
+    <div class="hero-names" id="hero-names">
+      Loading<em><span class="hero-amp">&amp;</span>...</em>
+    </div>
+    <div class="hero-date" id="hero-date">—</div>
+    <div class="hero-line"></div>
+    <div class="hero-btns">
+      <button class="btn-lg btn-dark" onclick="openUpload()">📷 Upload Fotomu</button>
+      <button class="btn-lg btn-border" onclick="document.getElementById('gallery-section').scrollIntoView({behavior:'smooth'})">Lihat Galeri</button>
+    </div>
+    <div class="hero-stats">
+      <div class="hstat"><div class="hstat-n" id="stat-total">0</div><div class="hstat-l">Foto</div></div>
+      <div class="hstat"><div class="hstat-n" id="stat-guests">0</div><div class="hstat-l">Tamu</div></div>
+      <div class="hstat"><div class="hstat-n">∞</div><div class="hstat-l">Kenangan</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── ADMIN PANEL ── -->
+<div class="admin-panel" id="admin-panel">
+  <div class="admin-title">Panel Admin <span>PRIVATE</span></div>
+  <div class="admin-grid">
+    <div class="admin-stat"><div class="admin-stat-n" id="a-total">0</div><div class="admin-stat-l">Total Foto</div></div>
+    <div class="admin-stat"><div class="admin-stat-n" id="a-guests">0</div><div class="admin-stat-l">Tamu Upload</div></div>
+    <div class="admin-stat"><div class="admin-stat-n" id="a-today">0</div><div class="admin-stat-l">Hari Ini</div></div>
+    <div class="admin-stat"><div class="admin-stat-n" id="a-size">0 MB</div><div class="admin-stat-l">Est. Ukuran</div></div>
+  </div>
+  <div class="admin-actions">
+    <button class="btn-sm btn-rose" onclick="downloadAllZip()">⬇ Download Semua (ZIP)</button>
+    <button class="btn-sm btn-outline-sm" onclick="showGuestList()">👥 Daftar Tamu</button>
+    <button class="btn-sm btn-ghost" onclick="deleteAllPhotos()">🗑 Hapus Semua Foto</button>
+  </div>
+</div>
+
+<!-- ── GALLERY ── -->
+<section class="section" id="gallery-section">
+  <div class="sec-head">
+    <div class="sec-label">Galeri Bersama</div>
+    <h2 class="sec-title">Momen dari <em>Para Tamu</em></h2>
+  </div>
+  <div class="gal-toolbar">
+    <div class="gal-count" id="gal-count">— foto</div>
+    <div class="gal-filters">
+      <button class="filter-pill on" onclick="filterGal('all',this)">Semua</button>
+      <div id="guest-filters"></div>
+    </div>
+  </div>
+  <div class="gallery-grid" id="gallery-grid"></div>
+  <div class="empty-gal" id="empty-gal">
+    <p>Belum ada foto. Jadilah yang pertama berbagi momen! ✦</p>
+  </div>
+</section>
+
+<!-- ── UPLOAD BAND ── -->
+<section class="upload-band">
+  <div class="upload-inner">
+    <div class="sec-label" style="color:var(--warm);">Untuk Para Tamu</div>
+    <h2 class="sec-title" style="font-family:'Playfair Display',serif;font-size:clamp(26px,5vw,42px);font-weight:400;">Abadikan <em>Momenmu</em></h2>
+    <p style="margin-top:14px;font-size:14px;color:var(--warm);line-height:1.8;" id="upload-desc">Upload foto dari acara ini.</p>
+    <button class="btn-lg btn-dark" style="margin-top:28px;" onclick="openUpload()">✦ Upload Foto Sekarang</button>
+  </div>
+</section>
+
+<!-- ── QR SECTION ── -->
+<section class="qr-sec" id="qr-section">
+  <div class="sec-label">Bagikan ke Tamu</div>
+  <h2 class="sec-title">QR Code <em>&amp; Link</em></h2>
+  <div class="qr-wrap">
+    <div>
+      <div class="qr-box-outer" id="qrcode-el"></div>
+      <div style="text-align:center;margin-top:10px;font-size:10px;color:rgba(232,216,207,.6);letter-spacing:.15em;">SCAN TO OPEN</div>
+    </div>
+    <div class="qr-info">
+      <h3>Cetak &amp; Pajang<br>di Meja Tamu</h3>
+      <p>Tamu scan QR code ini → langsung buka galeri dan upload foto. Tidak perlu install app apapun.</p>
+      <div class="qr-link-box" id="qr-link-display">—</div>
+      <div class="qr-btns">
+        <button class="btn-sm btn-rose" onclick="copyLink()">Salin Link</button>
+        <button class="btn-sm btn-outline-sm" style="border-color:var(--gold);color:var(--gold);" onclick="downloadQR()">Download QR</button>
+        <button class="btn-sm btn-ghost" style="border-color:rgba(255,255,255,.2);color:var(--soft);" onclick="shareWA()">WhatsApp</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="ft" id="footer-name">Memoir</div>
+  <div id="footer-date" style="margin-bottom:16px;">—</div>
+  <a href="index.html">← Buat Acara Baru</a>
+  <div style="margin-top:16px;font-size:10px;opacity:.4;">Semua kenangan tersimpan dengan aman ✦</div>
+</footer>
+
+<!-- ── LIGHTBOX ── -->
+<div class="lb" id="lb" onclick="lbOutside(event)">
+  <button class="lb-close" onclick="lbClose()">×</button>
+  <button class="lb-nav lb-prev" onclick="lbNav(-1)">‹</button>
+  <div class="lb-img-wrap">
+    <img src="" alt="" id="lb-img">
+    <div class="lb-wm" id="lb-wm"></div>
+  </div>
+  <button class="lb-nav lb-next" onclick="lbNav(1)">›</button>
+  <div class="lb-info">
+    <div class="lb-name" id="lb-name"></div>
+    <div class="lb-time" id="lb-time"></div>
+  </div>
+</div>
+
+<!-- ── UPLOAD MODAL ── -->
+<div class="overlay" id="up-overlay" onclick="closeUpOutside(event)">
+  <div class="modal-c">
+    <h2>Bagikan Fotomu</h2>
+    <p class="modal-sub" id="up-subtitle">Upload foto dari acara ✦</p>
+    <div class="field">
+      <label>Nama Kamu *</label>
+      <input type="text" id="guest-name" placeholder="Tulis namamu...">
+    </div>
+    <div class="drop-z" id="drop-zone" onclick="document.getElementById('file-in').click()" ondragover="dragOver(event)" ondragleave="dragLeave()" ondrop="onDrop(event)">
+      <div style="font-size:32px;">🌸</div>
+      <p><strong>Klik atau seret foto ke sini</strong><br>Bisa pilih banyak foto sekaligus<br><small style="font-size:11px;color:var(--soft);">JPG, PNG · Dikompres otomatis</small></p>
+      <input type="file" id="file-in" accept="image/*" multiple style="display:none" onchange="handleFiles(this.files)">
+    </div>
+    <div class="prev-grid" id="prev-grid"></div>
+    <div class="prog" id="prog"><div class="prog-fill" id="prog-fill"></div></div>
+    <div class="modal-btns">
+      <button class="btn-cancel-m" onclick="closeUp()">Batal</button>
+      <button class="btn-submit" id="btn-submit" onclick="submitPhotos()">Upload Foto ✦</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────
+const params = new URLSearchParams(window.location.search);
+const EVENT_ID = params.get('id') || '';
+const IS_ADMIN = params.get('admin') === '1';
+const ADMIN_PASS = params.get('pass') || '';
+let eventData = null;
+let photos = [];
+let pending = [];
+let lbIdx = 0;
+let currentFilter = 'all';
+let filteredPhotos = [];
+let adminUnlocked = false;
+
+const STORAGE_KEY = 'memoir-photos-' + EVENT_ID;
+const EVENT_KEY = 'memoir-event-' + EVENT_ID;
+
+// ── INIT ──────────────────────────────────────────────────────
+async function init() {
+  if (!EVENT_ID) { showNotFound(); return; }
+
+  // Load event data from localStorage
+  try {
+    const raw = localStorage.getItem(EVENT_KEY);
+    if (raw) eventData = JSON.parse(raw);
+  } catch(e) {}
+
+  if (!eventData) {
+    // fallback for direct demo access
+    if (EVENT_ID === 'dikin-eka-2026' || EVENT_ID === 'demo') {
+      eventData = { id: EVENT_ID, type: 'wedding', name1: 'Dikin', name2: 'Eka', date: '2026-02-18', location: 'Pati', password: '' };
+      localStorage.setItem(EVENT_KEY, JSON.stringify(eventData));
+    } else {
+      showNotFound(); return;
+    }
+  }
+
+  updateHero();
+  await loadPhotos();
+  initQR();
+  checkAdmin();
+
+  window.addEventListener('scroll', () => {
+    document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 60);
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { lbClose(); closeUp(); }
+    if (e.key === 'ArrowLeft') lbNav(-1);
+    if (e.key === 'ArrowRight') lbNav(1);
+  });
+}
+
+function showNotFound() {
+  document.body.innerHTML = `<div class="not-found"><h1>Acara tidak ditemukan</h1><p>Kode acara "<strong>${EVENT_ID}</strong>" tidak ada atau sudah dihapus.</p><a href="index.html" style="background:var(--rose);color:white;padding:14px 32px;font-family:Jost,sans-serif;font-size:12px;letter-spacing:.15em;text-transform:uppercase;text-decoration:none;">← Kembali</a></div>`;
+}
+
+function getWatermarkText() {
+  if (!eventData) return 'Memoir';
+  if (eventData.name2) return eventData.name1 + ' & ' + eventData.name2;
+  return eventData.name1;
+}
+
+function updateHero() {
+  const e = eventData;
+  const typeLabels = { wedding:'Wedding · Pernikahan', birthday:'Ulang Tahun', reunion:'Reuni', graduation:'Wisuda', other:'Special Event' };
+  document.getElementById('hero-type').textContent = typeLabels[e.type] || 'Special Event';
+  document.title = `Memoir — ${e.name1}${e.name2 ? ' & ' + e.name2 : ''}`;
+
+  if (e.name2) {
+    document.getElementById('hero-names').innerHTML = `${e.name1}<em><span class="hero-amp">&amp;</span>${e.name2}</em>`;
+  } else {
+    document.getElementById('hero-names').innerHTML = `<em>${e.name1}</em>`;
+  }
+
+  const dateStr = e.date ? new Date(e.date+'T00:00:00').toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) : '';
+  document.getElementById('hero-date').textContent = [dateStr, e.location].filter(Boolean).join(' · ');
+  document.getElementById('footer-name').textContent = e.name2 ? e.name1+' & '+e.name2 : e.name1;
+  document.getElementById('footer-date').textContent = dateStr;
+  document.getElementById('up-subtitle').textContent = `Upload foto dari acara ${e.name2?e.name1+' & '+e.name2:e.name1} ✦`;
+  document.getElementById('upload-desc').textContent = `Upload foto dari acara dan jadilah bagian dari kenangan abadi ${e.name2?e.name1+' & '+e.name2:e.name1}.`;
+}
+
+// ── PHOTOS ────────────────────────────────────────────────────
+async function loadPhotos() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) photos = JSON.parse(raw);
+  } catch(e) { photos = []; }
+  renderGallery();
+  updateStats();
+}
+
+async function savePhotos() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(photos));
+  } catch(e) {
+    // localStorage full - compress older photos
+    showToast('Penyimpanan hampir penuh, hapus beberapa foto lama');
+  }
+}
+
+// ── GALLERY ───────────────────────────────────────────────────
+function renderGallery() {
+  const grid = document.getElementById('gallery-grid');
+  const empty = document.getElementById('empty-gal');
+  const wm = getWatermarkText();
+
+  filteredPhotos = currentFilter === 'all' ? [...photos] : photos.filter(p => p.name === currentFilter);
+  const display = [...filteredPhotos].reverse();
+
+  grid.innerHTML = '';
+  document.getElementById('gal-count').textContent = display.length + ' foto';
+
+  if (display.length === 0) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  display.forEach((p, i) => {
+    const card = document.createElement('div');
+    card.className = 'photo-card';
+    card.style.animationDelay = Math.min(i * 0.04, 0.6) + 's';
+    card.innerHTML = `
+      <img src="${p.dataUrl}" alt="${p.name}" loading="lazy">
+      <div class="photo-ov">
+        <div class="photo-name">${p.name}</div>
+        <div class="photo-time">${p.time}</div>
+      </div>
+      <div class="photo-badge">${p.name.split(' ')[0]}</div>
+      <div class="photo-wm">${wm}</div>
+    `;
+    card.onclick = () => openLb(filteredPhotos.length - 1 - i);
+    grid.appendChild(card);
+  });
+
+  renderGuestFilters();
+}
+
+function renderGuestFilters() {
+  const guests = [...new Set(photos.map(p => p.name))];
+  const container = document.getElementById('guest-filters');
+  container.innerHTML = '';
+  guests.slice(0, 8).forEach(name => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-pill' + (currentFilter === name ? ' on' : '');
+    btn.textContent = name.split(' ')[0];
+    btn.onclick = () => filterGal(name, btn);
+    container.appendChild(btn);
+  });
+}
+
+function filterGal(val, btn) {
+  currentFilter = val;
+  document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderGallery();
+}
+
+function updateStats() {
+  const total = photos.length;
+  const guests = new Set(photos.map(p => p.name)).size;
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-guests').textContent = guests;
+  if (adminUnlocked) updateAdminStats();
+}
+
+// ── UPLOAD ────────────────────────────────────────────────────
+function openUpload() {
+  document.getElementById('up-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeUp() {
+  document.getElementById('up-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+  pending = [];
+  document.getElementById('prev-grid').innerHTML = '';
+  document.getElementById('file-in').value = '';
+  document.getElementById('prog').style.display = 'none';
+  document.getElementById('prog-fill').style.width = '0%';
+  document.getElementById('btn-submit').disabled = false;
+  document.getElementById('btn-submit').textContent = 'Upload Foto ✦';
+}
+function closeUpOutside(e) { if (e.target === document.getElementById('up-overlay')) closeUp(); }
+function dragOver(e) { e.preventDefault(); document.getElementById('drop-zone').classList.add('drag'); }
+function dragLeave() { document.getElementById('drop-zone').classList.remove('drag'); }
+function onDrop(e) { e.preventDefault(); dragLeave(); handleFiles(e.dataTransfer.files); }
+
+function handleFiles(files) {
+  Array.from(files).forEach(f => {
+    if (!f.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = e => { pending.push({ dataUrl: e.target.result }); renderPreviews(); };
+    reader.readAsDataURL(f);
+  });
+}
+
+function renderPreviews() {
+  const g = document.getElementById('prev-grid');
+  g.innerHTML = '';
+  pending.forEach(f => {
+    const img = document.createElement('img');
+    img.src = f.dataUrl;
+    g.appendChild(img);
+  });
+}
+
+async function submitPhotos() {
+  const name = document.getElementById('guest-name').value.trim();
+  if (!name) { document.getElementById('guest-name').focus(); showToast('Tulis namamu dulu ✦'); return; }
+  if (!pending.length) { showToast('Pilih foto dulu ✦'); return; }
+
+  const btn = document.getElementById('btn-submit');
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+  document.getElementById('prog').style.display = 'block';
+  const fill = document.getElementById('prog-fill');
+
+  const now = new Date();
+  const timeStr = now.toLocaleString('id-ID', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
+
+  for (let i = 0; i < pending.length; i++) {
+    const compressed = await compressImg(pending[i].dataUrl, 900, 0.78);
+    photos.push({ id: Date.now() + i, name, dataUrl: compressed, time: timeStr, ts: now.getTime() });
+    fill.style.width = ((i + 1) / pending.length * 100) + '%';
+    await new Promise(r => setTimeout(r, 60));
+  }
+
+  await savePhotos();
+  renderGallery();
+  updateStats();
+  closeUp();
+  showToast(`${pending.length} foto berhasil diupload ✦`);
+}
+
+function compressImg(dataUrl, maxW, q) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let w = img.width, h = img.height;
+      if (w > maxW) { h = h * maxW / w; w = maxW; }
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      // Add watermark to image
+      const wm = getWatermarkText();
+      ctx.font = `italic ${Math.max(14, w * 0.025)}px "Playfair Display", Georgia, serif`;
+      ctx.fillStyle = 'rgba(255,255,255,0.45)';
+      ctx.textAlign = 'right';
+      ctx.fillText(wm, w - 12, h - 12);
+      resolve(canvas.toDataURL('image/jpeg', q));
+    };
+    img.src = dataUrl;
+  });
+}
+
+// ── LIGHTBOX ──────────────────────────────────────────────────
+function openLb(idx) {
+  lbIdx = idx; showLbPhoto();
+  document.getElementById('lb').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function showLbPhoto() {
+  const p = filteredPhotos[lbIdx];
+  document.getElementById('lb-img').src = p.dataUrl;
+  document.getElementById('lb-name').textContent = p.name;
+  document.getElementById('lb-time').textContent = p.time;
+  document.getElementById('lb-wm').textContent = getWatermarkText();
+}
+function lbNav(d) { lbIdx = (lbIdx + d + filteredPhotos.length) % filteredPhotos.length; showLbPhoto(); }
+function lbClose() { document.getElementById('lb').classList.remove('open'); document.body.style.overflow = ''; }
+function lbOutside(e) { if (e.target === document.getElementById('lb')) lbClose(); }
+
+// ── QR CODE ───────────────────────────────────────────────────
+function initQR() {
+  const url = window.location.origin + window.location.pathname + '?id=' + EVENT_ID;
+  document.getElementById('qr-link-display').textContent = url;
+  try {
+    new QRCode(document.getElementById('qrcode-el'), {
+      text: url, width: 180, height: 180,
+      colorDark: '#2C1F1A', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.H
+    });
+  } catch(e) {}
+}
+
+function copyLink() {
+  const url = window.location.origin + window.location.pathname + '?id=' + EVENT_ID;
+  navigator.clipboard.writeText(url).then(() => showToast('Link disalin ✦'));
+}
+
+function shareWA() {
+  const wm = getWatermarkText();
+  const url = window.location.origin + window.location.pathname + '?id=' + EVENT_ID;
+  const msg = `Halo! Kamu diundang untuk berbagi foto di acara ${wm}.\n\nBuka link ini dan upload fotomu:\n${url}`;
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+}
+
+function downloadQR() {
+  const canvas = document.querySelector('#qrcode-el canvas');
+  if (!canvas) { showToast('QR Code belum siap'); return; }
+  const link = document.createElement('a');
+  link.download = `qr-${EVENT_ID}.png`;
+  link.href = canvas.toDataURL();
+  link.click();
+  showToast('QR Code didownload ✦');
+}
+
+// ── ADMIN ─────────────────────────────────────────────────────
+function checkAdmin() {
+  if (IS_ADMIN) {
+    adminUnlocked = true;
+    document.getElementById('btn-admin-toggle').style.display = '';
+    updateAdminStats();
+  }
+}
+
+function toggleAdminPanel() {
+  if (!adminUnlocked) {
+    const pass = prompt('Masukkan password admin:');
+    if (pass !== (eventData.password || '')) { showToast('Password salah'); return; }
+    adminUnlocked = true;
+  }
+  const panel = document.getElementById('admin-panel');
+  panel.classList.toggle('show');
+  if (panel.classList.contains('show')) updateAdminStats();
+}
+
+function updateAdminStats() {
+  document.getElementById('a-total').textContent = photos.length;
+  document.getElementById('a-guests').textContent = new Set(photos.map(p => p.name)).size;
+  const today = new Date().toLocaleDateString('id-ID');
+  const todayCount = photos.filter(p => new Date(p.ts).toLocaleDateString('id-ID') === today).length;
+  document.getElementById('a-today').textContent = todayCount;
+  const approxMB = (photos.reduce((s, p) => s + (p.dataUrl.length * 0.75), 0) / 1024 / 1024).toFixed(1);
+  document.getElementById('a-size').textContent = approxMB + ' MB';
+}
+
+async function downloadAllZip() {
+  if (!photos.length) { showToast('Belum ada foto'); return; }
+  showToast('Menyiapkan ZIP...');
+
+  try {
+    const zip = new JSZip();
+    const folder = zip.folder(getWatermarkText().replace(/\s+/g, '-'));
+    photos.forEach((p, i) => {
+      const b64 = p.dataUrl.split(',')[1];
+      const ext = p.dataUrl.includes('png') ? 'png' : 'jpg';
+      const fname = `${String(i+1).padStart(3,'0')}_${p.name.replace(/\s+/g,'-')}.${ext}`;
+      folder.file(fname, b64, { base64: true });
+    });
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `${EVENT_ID}-photos.zip`; a.click();
+    URL.revokeObjectURL(url);
+    showToast(`${photos.length} foto didownload ✦`);
+  } catch(e) {
+    showToast('Gagal membuat ZIP: ' + e.message);
+  }
+}
+
+function showGuestList() {
+  const guests = {};
+  photos.forEach(p => { guests[p.name] = (guests[p.name] || 0) + 1; });
+  const list = Object.entries(guests).sort((a,b)=>b[1]-a[1]).map(([n,c])=>`• ${n}: ${c} foto`).join('\n');
+  alert(`Daftar Tamu (${Object.keys(guests).length} orang):\n\n${list}`);
+}
+
+async function deleteAllPhotos() {
+  if (!confirm('Yakin hapus SEMUA foto? Tindakan ini tidak bisa dibatalkan.')) return;
+  photos = [];
+  localStorage.removeItem(STORAGE_KEY);
+  renderGallery();
+  updateStats();
+  showToast('Semua foto dihapus');
+}
+
+// ── TOAST ─────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+init();
+</script>
+</body>
+</html>
