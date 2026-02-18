@@ -221,7 +221,7 @@ function updateSlugPreview(){
 });
 document.getElementById('event-slug').addEventListener('input',updateSlugPreview);
 
-async function createEvent(){
+function createEvent(){
   const slug=document.getElementById('event-slug').value.trim();
   const name1=document.getElementById('event-name1').value.trim();
   const name2=document.getElementById('event-name2').value.trim();
@@ -230,26 +230,24 @@ async function createEvent(){
   const password=document.getElementById('event-password').value;
   const type=document.getElementById('event-type').value;
 
-  if(!slug||!name1){showToast('Isi nama dan kode acara dulu ✦');return;}
+  if(!slug){showToast('Isi kode acara dulu ✦');return;}
+  if(!name1){showToast('Isi nama dulu ✦');return;}
 
   const eventData={
     id:slug, type, name1, name2, date, location, password,
     createdAt:new Date().toISOString()
   };
 
-  // Save event list
+  // Save event to localStorage
   let events=[];
-  try{
-    const r=await window.storage.get('memoir-events',true);
-    if(r) events=JSON.parse(r.value);
-  }catch(e){}
+  try{ events=JSON.parse(localStorage.getItem('memoir-events')||'[]'); }catch(e){}
 
   if(events.find(e=>e.id===slug)){
     showToast('Kode sudah dipakai, coba yang lain');return;
   }
   events.push(eventData);
-  await window.storage.set('memoir-events',JSON.stringify(events),true);
-  await window.storage.set('memoir-event-'+slug,JSON.stringify(eventData),true);
+  localStorage.setItem('memoir-events', JSON.stringify(events));
+  localStorage.setItem('memoir-event-'+slug, JSON.stringify(eventData));
 
   closeCreateBtn();
   window.location.href='event.html?id='+slug+'&admin=1&pass='+encodeURIComponent(password);
